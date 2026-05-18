@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="dashboard-head">
+  <div>
+    <h1>Request #{{ row.id }}</h1>
+    <p>{{ row.company_name }} · {{ row.requester_name }} ({{ row.requester_email }})</p>
+  </div>
+  <div class="actions inline-actions">
+    <a class="button ghost" href="{{ url_for('admin_dashboard') }}">Back to dashboard</a>
+  </div>
+</section>
+
+<section class="grid-2 wider-left">
+  <section class="card">
+    <h2>Request details</h2>
+    <dl class="detail-grid">
+      <dt>Perk type</dt><dd>{{ row.perk_type }}</dd>
+      <dt>Status</dt><dd><span class="status status-{{ row.status }}">{{ STATUS_LABELS.get(row.status, row.status) }}</span></dd>
+      <dt>Portfolio verified</dt><dd>{{ 'Yes' if row.portfolio_verified else 'No' }}</dd>
+      <dt>Verification reason</dt><dd>{{ row.verification_reason or '-' }}</dd>
+      <dt>Website</dt><dd>{{ row.company_website or '-' }}</dd>
+      <dt>Expected spend</dt><dd>{{ row.expected_monthly_spend or '-' }}</dd>
+      <dt>Requested at</dt><dd>{{ row.requested_at.strftime('%Y-%m-%d %H:%M UTC') }}</dd>
+      <dt>Reviewed at</dt><dd>{{ row.reviewed_at.strftime('%Y-%m-%d %H:%M UTC') if row.reviewed_at else '-' }}</dd>
+      <dt>Partner emailed</dt><dd>{{ row.partner_notified_at.strftime('%Y-%m-%d %H:%M UTC') if row.partner_notified_at else '-' }}</dd>
+      <dt>Partner email</dt><dd>{{ row.partner_notified_email or '-' }}</dd>
+      <dt>Code received</dt><dd>{{ row.code_received_at.strftime('%Y-%m-%d %H:%M UTC') if row.code_received_at else '-' }}</dd>
+      <dt>Delivered</dt><dd>{{ row.code_delivered_at.strftime('%Y-%m-%d %H:%M UTC') if row.code_delivered_at else '-' }}</dd>
+      <dt>Last email status</dt><dd>{{ row.last_email_status or '-' }}</dd>
+    </dl>
+
+    <h3>Use case</h3>
+    <pre class="prewrap">{{ row.use_case }}</pre>
+
+    <h3>Internal notes</h3>
+    <pre class="prewrap">{{ row.notes or '-' }}</pre>
+  </section>
+
+  <section class="stack">
+    <section class="card">
+      <h2>Actions</h2>
+      <div class="action-grid">
+        <form method="post" action="{{ url_for('update_request', request_id=row.id) }}">
+          <input type="hidden" name="action" value="approve" />
+          <button type="submit">Approve</button>
+        </form>
+        <form method="post" action="{{ url_for('update_request', request_id=row.id) }}">
+          <input type="hidden" name="action" value="reject" />
+          <button class="danger" type="submit">Reject</button>
+        </form>
+        <form method="post" action="{{ url_for('update_request', request_id=row.id) }}">
+          <input type="hidden" name="action" value="send_email" />
+          <button class="secondary" type="submit">Email Supabase</button>
+        </form>
+        <form method="post" action="{{ url_for('update_request', request_id=row.id) }}">
+          <input type="hidden" name="action" value="code_received" />
+          <button class="secondary" type="submit">Mark code received</button>
+        </form>
+        <form method="post" action="{{ url_for('update_request', request_id=row.id) }}">
+          <input type="hidden" name="action" value="fulfilled" />
+          <button class="secondary" type="submit">Mark fulfilled</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Audit trail</h2>
+      <div class="list-stack compact">
+        {% for log in logs %}
+          <article class="mini-card compact-card">
+            <strong>{{ log.action }}</strong>
+            <small>{{ log.actor }} · {{ log.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</small>
+            {% if log.meta %}<small>{{ log.meta }}</small>{% endif %}
+          </article>
+        {% else %}
+          <p>No logs yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </section>
+</section>
+{% endblock %}

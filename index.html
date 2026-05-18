@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero card">
+  <div>
+    <span class="pill">Program ops MVP</span>
+    <h1>Authorize and track partner perks for Spark Claw</h1>
+    <p>
+      This MVP is optimized for the Spark Claw program's partner benefit workflow,
+      starting with Supabase requests and portfolio verification.
+    </p>
+    <ul class="feature-list">
+      <li>Capture when API / perk access was requested</li>
+      <li>Verify whether the requester belongs to a Spark Claw portfolio company</li>
+      <li>Email Supabase automatically once a verified request is submitted</li>
+      <li>Track review, partner notification, code receipt, and fulfillment timestamps</li>
+    </ul>
+  </div>
+  <div class="stats-box">
+    <div><strong>{{ company_count }}</strong><span>portfolio companies configured</span></div>
+    <div><strong>{{ recent_requests|length }}</strong><span>recent requests shown below</span></div>
+  </div>
+</section>
+
+<section class="grid-2">
+  <section class="card">
+    <h2>New perk request</h2>
+    <form method="post" action="{{ url_for('submit_request') }}" class="form-grid">
+      <label>
+        <span>Requester name *</span>
+        <input name="requester_name" required />
+      </label>
+      <label>
+        <span>Work email *</span>
+        <input name="requester_email" type="email" required />
+      </label>
+      <label>
+        <span>Company name *</span>
+        <input name="company_name" required />
+      </label>
+      <label>
+        <span>Company website</span>
+        <input name="company_website" placeholder="https://" />
+      </label>
+      <label>
+        <span>Perk type</span>
+        <select name="perk_type">
+          <option>Supabase credits</option>
+          <option>Supabase startup support</option>
+          <option>Supabase architectural review</option>
+        </select>
+      </label>
+      <label>
+        <span>Expected monthly spend</span>
+        <input name="expected_monthly_spend" placeholder="e.g. $200-$500" />
+      </label>
+      <label class="full">
+        <span>Use case *</span>
+        <textarea name="use_case" rows="5" required placeholder="Describe product, expected scale, and why this perk matters."></textarea>
+      </label>
+      <label class="full">
+        <span>Internal notes</span>
+        <textarea name="notes" rows="3" placeholder="Optional context for the partner team"></textarea>
+      </label>
+      <div class="full actions">
+        <button type="submit">Submit request</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Recent requests</h2>
+    {% if recent_requests %}
+      <div class="list-stack">
+        {% for row in recent_requests %}
+          <article class="mini-card">
+            <div class="mini-head">
+              <strong>#{{ row.id }} · {{ row.company_name }}</strong>
+              <span class="status status-{{ row.status }}">{{ STATUS_LABELS.get(row.status, row.status) }}</span>
+            </div>
+            <p>{{ row.requester_name }} · {{ row.requester_email }}</p>
+            <p>{{ row.perk_type }}</p>
+            <small>Requested {{ row.requested_at.strftime('%Y-%m-%d %H:%M UTC') }}</small>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No requests yet.</p>
+    {% endif %}
+
+    <hr />
+    <h3>How verification works</h3>
+    <ol class="number-list">
+      <li>Admin adds a portfolio company and approved email domains.</li>
+      <li>Requester submits a Supabase perk request using a work email.</li>
+      <li>The app auto-matches the email domain to your portfolio records.</li>
+      <li>If verified, it can auto-email Supabase and start the fulfillment timeline.</li>
+    </ol>
+  </section>
+</section>
+{% endblock %}

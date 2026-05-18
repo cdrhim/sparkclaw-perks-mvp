@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card narrow">
+  <h1>Admin sign in</h1>
+  <form method="post" class="form-grid">
+    <label>
+      <span>Admin email</span>
+      <input type="email" name="email" required />
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" required />
+    </label>
+    <div class="actions">
+      <button type="submit">Sign in</button>
+    </div>
+  </form>
+  <p class="muted">Default local demo login uses values from <code>.env</code>.</p>
+</section>
+{% endblock %}

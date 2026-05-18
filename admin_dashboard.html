@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="dashboard-head">
+  <div>
+    <h1>Admin dashboard</h1>
+    <p>Track request intake, portfolio verification, partner outreach, and fulfillment.</p>
+  </div>
+  <div class="actions inline-actions">
+    <a class="button secondary" href="{{ url_for('export_csv') }}">Export CSV</a>
+    <a class="button ghost" href="{{ url_for('admin_logout') }}">Sign out</a>
+  </div>
+</section>
+
+<section class="stats-grid">
+  <article class="stat-card"><strong>{{ stats.total }}</strong><span>Total requests</span></article>
+  <article class="stat-card"><strong>{{ stats.verified }}</strong><span>Portfolio verified</span></article>
+  <article class="stat-card"><strong>{{ stats.needs_review }}</strong><span>Needs review</span></article>
+  <article class="stat-card"><strong>{{ stats.partner_emailed }}</strong><span>Partner emailed</span></article>
+  <article class="stat-card"><strong>{{ stats.fulfilled }}</strong><span>Fulfilled</span></article>
+</section>
+
+<section class="grid-2 wider-left">
+  <section class="card">
+    <div class="section-head">
+      <h2>Requests</h2>
+      <form method="get" class="filter-bar">
+        <input name="search" value="{{ search }}" placeholder="Search company, person, or email" />
+        <select name="status">
+          <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All statuses</option>
+          {% for value, label in STATUS_LABELS.items() %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Filter</button>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Company</th>
+            <th>Requester</th>
+            <th>Perk</th>
+            <th>Status</th>
+            <th>Requested</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in requests %}
+            <tr>
+              <td>#{{ row.id }}</td>
+              <td>
+                <strong>{{ row.company_name }}</strong>
+                {% if row.portfolio_verified %}
+                  <div class="tiny success">Verified</div>
+                {% else %}
+                  <div class="tiny muted">Manual review</div>
+                {% endif %}
+              </td>
+              <td>{{ row.requester_name }}<br /><small>{{ row.requester_email }}</small></td>
+              <td>{{ row.perk_type }}</td>
+              <td><span class="status status-{{ row.status }}">{{ STATUS_LABELS.get(row.status, row.status) }}</span></td>
+              <td>{{ row.requested_at.strftime('%Y-%m-%d') }}</td>
+              <td><a class="button ghost" href="{{ url_for('request_detail', request_id=row.id) }}">Open</a></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="7">No requests found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="stack">
+    <section class="card">
+      <h2>Add or update portfolio company</h2>
+      <form method="post" action="{{ url_for('add_portfolio_company') }}" class="form-grid">
+        <label>
+          <span>Company name</span>
+          <input name="name" required />
+        </label>
+        <label>
+          <span>Website</span>
+          <input name="website" placeholder="https://" />
+        </label>
+        <label class="full">
+          <span>Allowed email domains</span>
+          <input name="allowed_domains" required placeholder="company.com, product.company.com" />
+        </label>
+        <label class="full">
+          <span>Notes</span>
+          <textarea name="notes" rows="3"></textarea>
+        </label>
+        <div class="full actions">
+          <button type="submit">Save company</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Portfolio companies</h2>
+      <div class="list-stack compact">
+        {% for company in companies %}
+          <article class="mini-card compact-card">
+            <strong>{{ company.name }}</strong>
+            <small>{{ company.allowed_domains }}</small>
+          </article>
+        {% else %}
+          <p>No companies configured yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Recent audit log</h2>
+      <div class="list-stack compact">
+        {% for log in recent_logs %}
+          <article class="mini-card compact-card">
+            <strong>{{ log.action }}</strong>
+            <small>{{ log.actor }} · {{ log.created_at.strftime('%Y-%m-%d %H:%M UTC') }}</small>
+            {% if log.request_id %}<small>Request #{{ log.request_id }}</small>{% endif %}
+          </article>
+        {% else %}
+          <p>No activity yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </section>
+</section>
+{% endblock %}
