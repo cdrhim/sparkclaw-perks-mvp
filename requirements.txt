@@ -3,3 +3,4 @@ flask-sqlalchemy
 email-validator
 requests
 python-dotenv
+gunicorn
